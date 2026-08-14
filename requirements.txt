@@ -4,3 +4,11 @@ sqlalchemy
 psycopg2-binary
 pydantic
 email-validator
+passlib==1.7.4
+bcrypt==4.3.0
+python-jose
+python-multipart
+python-dotenv
+pytest
+pytest-cov
+httpx

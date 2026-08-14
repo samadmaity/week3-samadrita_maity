@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from schemas.category_schema import CategoryCreate, CategoryResponse
 from services.category_service import CategoryService
+from app.models.user import User
+from utils.auth import require_roles
 
 router = APIRouter(
     prefix="/categories",
@@ -15,10 +17,19 @@ router = APIRouter(
 
 category_service= CategoryService()
 
-@router.post("/", response_model=CategoryResponse)
-
-def create_category(category: CategoryCreate, db:Session = Depends(get_db)):
-    return category_service.create_category(db,category)
+@router.post(
+    "/",
+    response_model=CategoryResponse,
+)
+def create_category(
+    category: CategoryCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("admin")),
+):
+    return category_service.create_category(
+        db,
+        category,
+    )
 
 @router.get("/",response_model=List[CategoryResponse])
 

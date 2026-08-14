@@ -10,6 +10,7 @@ class User(Base):
     email = Column(String(100), unique= True, nullable= False)
     password = Column(String(255), nullable= False)
     mobile = Column(String(15), nullable= False)
+    role = Column(String(20),nullable=False,default="customer",server_default="customer",index=True)
     cart_items = relationship("CartItem",back_populates="user",cascade="all, delete-orphan")
     orders = relationship("Order",back_populates="user",cascade="all, delete-orphan")
 

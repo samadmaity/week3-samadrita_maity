@@ -1,10 +1,12 @@
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.user import User
 from schemas.order_schema import OrderCreate, OrderResponse
 from services.order_service import OrderService
+from utils.auth import get_current_user
+from utils.notification import send_order_confirmation
 
 
 router = APIRouter(
@@ -20,15 +22,26 @@ order_service = OrderService()
     "/checkout",
     response_model=OrderResponse,
 )
-def checkout(
+async def checkout(
     order_data: OrderCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
-    return order_service.checkout(
+    order = order_service.checkout(
         db,
         order_data,
+        current_user.user_id,
     )
+
+    background_tasks.add_task(
+        send_order_confirmation,
+        order.order_id,
+        current_user.user_id,
+        order.total_amount,
+    )
+
+    return order
 
 
 @router.get(
@@ -38,11 +51,12 @@ def checkout(
 def get_order_details(
     order_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
     return order_service.get_order_details(
         db,
         order_id,
+        current_user.user_id,
     )
 
 
@@ -53,9 +67,10 @@ def get_order_details(
 def get_order_history(
     user_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
     return order_service.get_order_history(
         db,
         user_id,
+        current_user.user_id,
     )

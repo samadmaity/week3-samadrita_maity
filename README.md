@@ -1,116 +1,176 @@
 ## Online Shopping Application API
-A backend API for  online shopping application, built with FastAPI, SQLAlchemy, PostgreSQL, Pydantic, and a layered architecture.
+A FastAPI backend for an online shopping application using PostgreSQL, SQLAlchemy, Pydantic, JWT authentication, role-based authorization, logging, background tasks, and router testing.
 
 ## Features
 
-User registration and login
-Category and product management
-Product browsing and search
-Shopping cart management
-Cart quantity and stock validation
+User registration and JWT login
+Customer and admin role support
+Product and category management
+Product search and browsing
+Cart management with stock validation
 Order checkout and order history
 Product stock reduction after checkout
-PostgreSQL database integration
-Swagger/OpenAPI testing
-Docker and Docker Compose support
+Background order-confirmation task
+Application logging in app.log
+Swagger/OpenAPI documentation
+Automated router tests using Pytest
 
-## Technology Stack
+## Technology Stack               TechnologyPurpose
 
-| Technology | Purpose |
+      Python 3.12                Programming language
 
-|---|---|
 
-| Python 3.12 | Programming language |
+       FastAPI                      Web framework
 
-| FastAPI | Backend web framework |
 
-| SQLAlchemy | ORM and database interaction |
+     SQLAlchemy                 ORM and database access
 
-| PostgreSQL | Relational database |
 
-| Pydantic | Request and response validation |
+     PostgreSQL                        Database
 
-| Uvicorn | Application server |
 
-| Docker | Application containerization |
+      PydantiC                Request and response validation
 
-| Docker Compose | Running the application and PostgreSQL together |
 
-| Swagger/OpenAPI | API documentation and testing |
+     JWT/OAuth2                      Authentication
+
+
+       Pytest                       Automated testing
+
+
+      Uvicorn                       Application server
+
+
 
 ## Architecture
 
-The application follows this request flow:
-Client or Swagger UI → Router → Service → Repository → SQLAlchemy Model → PostgreSQL
+Plain textSwagger UI
+    ↓
+Routers
+    ↓
+Services
+    ↓
+Repositories
+    ↓
+SQLAlchemy Models
+    ↓
+PostgreSQL
 
-Router Layer: Defines API endpoints and handles HTTP requests.
-Service Layer: Contains business logic and validations.
-Repository Layer: Executes database queries and CRUD operations.
-Model Layer: Represents PostgreSQL database tables.
-Schema Layer: Validates request and response data.
-Utility Layer: Contains reusable helpers and exceptions.
+
+## Routers: Define API endpoints.
+## Services: Contain business logic and validations.
+## Repositories: Execute database operations.
+## Models: Represent database tables.
+## Schemas: Validate request and response data.
+## Utils: Provide authentication, logging, helpers, and notifications.
 
 ## Project Structure
 
-app/database.py – PostgreSQL connection and database sessions
-app/models/ – User, category, product, cart, and order models
-schemas/ – Pydantic request and response schemas
-repositories/ – Database-access methods
-services/ – Business logic
-routers/ – API endpoints
-utils/ – Helpers and reusable exceptions
-tests/ – Automated tests
-main.py – FastAPI application entry point
+CASESTUDY-WEEK2/
+├── app/
+│   ├── models/
+│   ├── database.py
+│   └── main.py
+├── repositories/
+├── routers/
+├── schemas/
+├── services/
+├── utils/
+├── test/
+│   ├── routes/
+│   │   ├── test_user_router.py
+│   │   ├── test_product_router.py
+│   │   ├── test_cart_router.py
+│   │   └── test_order_router.py
+│   ├── conftest.py
+│   └── testconfig.py
+├── app.log
+├── config.env
+├── requirements.txt
+└── README.md
 
-## Main API Endpoints
+## Main Endpoints
+## Users
 
 POST /users/register
-POST /users/login
-GET /categories/
-POST /products/
+POST /auth/login
+
+## Products
+
 GET /products/
+GET /products/{product_id}
 GET /products/search
+POST /products/ — Admin only
+PUT /products/{product_id} — Admin only
+DELETE /products/{product_id} — Admin only
+
+## Cart
+
 POST /cart/add
 GET /cart/{user_id}
 PUT /cart/update/{cart_item_id}
 DELETE /cart/remove/{cart_item_id}
+GET /cart/{user_id}/summary
+
+## Orders
+
 POST /orders/checkout
 GET /orders/{user_id}
 GET /orders/details/{order_id}
 
-## Setup
+## Validation and Security
 
-Create a PostgreSQL database named Shopping, configure the database connection, install the required dependencies, and start the application using Uvicorn.
-Swagger UI is available at:
-/docs
-For Docker execution, start the application using Docker Compose.
-Testing Sequence
+Email format validation
+Minimum password length
+Numeric mobile validation
+Duplicate email and product checks
+Product stock validation
+JWT-protected routes
+Cart and order ownership checks
+Admin-only product operations
+Supported payment methods: card, cash, and upi
 
-Register a user.
-Log in.
-Create or verify a category.
-Create a product.
-Add the product to the cart.
-View or update the cart.
-Complete checkout.
-View order history and order details.
+Passwords are hashed before storage and are never returned in API responses.
+Running the Application
 
-## Future Improvements
+## Create a PostgreSQL database.
+Configure the database URL and JWT settings in config.env.
+Install dependencies:
 
-Password hashing
+Plain textpip install -r requirements.txt
+
+
+## Start the application:
+
+Plain textuvicorn app.main:app --reload
+
+
+## Open Swagger UI:
+
+Plain texthttp://127.0.0.1:8000/docs
+
+## Testing
+The project contains router tests for users, products, carts, and orders.
+Run all router tests:
+Plain textpython -m pytest test/routes -v
+
+## Run coverage:
+Plain textpython -m pytest test/routes --cov=routers --cov-report=term-missing
+
+The tests cover successful requests, validation errors, authentication, authorization, cart ownership, checkout, stock reduction, and order history.
+Logging and Background Tasks
+Application logs are written to app.log.
+After successful checkout, a background task runs an order-confirmation process without delaying the main API response.
+
+## Project Status
+
+## Completed:
+
+PostgreSQL database integration
+Layered FastAPI architecture
+User, product, cart, and order modules
 JWT authentication
-Authorization checks
-Alembic migrations
-Automated tests
-Pagination and caching
-Payment integration
-Administrator features
-
-
-
-Add installation commands to this README
-Create an ER diagram section for the README
-
-
-
-
+Role-based authorization
+Logging
+Background tasks
+Router-level automated tests

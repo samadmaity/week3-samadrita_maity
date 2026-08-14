@@ -1,8 +1,8 @@
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.user import User
 from schemas.cart_schema import (
     CartItemCreate,
     CartItemResponse,
@@ -10,13 +10,13 @@ from schemas.cart_schema import (
     CartSummaryResponse,
 )
 from services.cart_service import CartService
+from utils.auth import get_current_user
 
 
 router = APIRouter(
     prefix="/cart",
     tags=["Cart"],
 )
-
 
 cart_service = CartService()
 
@@ -28,11 +28,12 @@ cart_service = CartService()
 def add_cart_item(
     cart_item: CartItemCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
     return cart_service.add_cart_item(
         db,
         cart_item,
+        current_user.user_id,
     )
 
 
@@ -43,11 +44,12 @@ def add_cart_item(
 def get_cart_summary(
     user_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
     return cart_service.get_cart_summary(
         db,
         user_id,
+        current_user.user_id,
     )
 
 
@@ -58,11 +60,12 @@ def get_cart_summary(
 def get_cart(
     user_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
     return cart_service.get_cart(
         db,
         user_id,
+        current_user.user_id,
     )
 
 
@@ -74,12 +77,13 @@ def update_cart_item(
     cart_item_id: int,
     cart_item_data: CartItemUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
     return cart_service.update_cart_item(
         db,
         cart_item_id,
         cart_item_data,
+        current_user.user_id,
     )
 
 
@@ -89,9 +93,10 @@ def update_cart_item(
 def remove_cart_item(
     cart_item_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
     return cart_service.remove_cart_item(
         db,
         cart_item_id,
+        current_user.user_id,
     )

@@ -1,14 +1,13 @@
-
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
 class CartItemCreate(BaseModel):
-    user_id: int = Field(
-        ...,
-        gt=0,
-    )
+    # user_id: int = Field(
+    #     ...,
+    #     gt=0,
+    # )
 
     product_id: int = Field(
         ...,

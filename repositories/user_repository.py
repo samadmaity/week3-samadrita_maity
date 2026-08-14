@@ -10,7 +10,8 @@ class UserRepository:
             name= user.name,
             email= user.email,
             password= user.password,
-            mobile= user.mobile
+            mobile= user.mobile,
+            role = "customer"
         )
 
         db.add(new_user)

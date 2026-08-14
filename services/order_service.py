@@ -19,7 +19,6 @@ class OrderService:
     }
 
     def __init__(self):
-
         self.cart_repository = CartRepository()
         self.order_repository = OrderRepository()
 
@@ -28,7 +27,6 @@ class OrderService:
         db: Session,
         user_id: int,
     ):
-
         user = (
             db.query(User)
             .filter(User.user_id == user_id)
@@ -43,18 +41,31 @@ class OrderService:
 
         return user
 
+    def _check_user_access(
+        self,
+        requested_user_id: int,
+        current_user_id: int,
+    ):
+        if requested_user_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can access only your own orders",
+            )
+
     def checkout(
         self,
         db: Session,
         order_data: OrderCreate,
+        current_user_id: int,
     ):
-
         self._check_user_exists(
             db,
-            order_data.user_id,
+            current_user_id,
         )
 
-        payment_method = order_data.payment_method.strip().lower()
+        payment_method = (
+            order_data.payment_method.strip().lower()
+        )
 
         if payment_method not in self.VALID_PAYMENT_METHODS:
             raise HTTPException(
@@ -62,9 +73,12 @@ class OrderService:
                 detail="Payment method must be card, cash, or upi",
             )
 
-        cart_items = self.cart_repository.get_cart_items_with_products(
-            db,
-            order_data.user_id,
+        cart_items = (
+            self.cart_repository
+            .get_cart_items_with_products(
+                db,
+                current_user_id,
+            )
         )
 
         if not cart_items:
@@ -73,11 +87,9 @@ class OrderService:
                 detail="Cannot checkout an empty cart",
             )
 
-        total_amount = calculate_order_total(cart_items)
         validated_items = []
 
         for cart_item in cart_items:
-
             product = cart_item.product
 
             if product is None:
@@ -105,9 +117,6 @@ class OrderService:
                 str(product.price),
             )
 
-            item_total = product_price * cart_item.quantity
-            total_amount += item_total
-
             validated_items.append(
                 (
                     cart_item,
@@ -116,41 +125,35 @@ class OrderService:
                 )
             )
 
-        try:
+        # Calculate the total only once.
+        total_amount = calculate_order_total(cart_items)
 
+        try:
             new_order = self.order_repository.create_order(
                 db=db,
-                user_id=order_data.user_id,
+                user_id=current_user_id,
                 payment_method=payment_method,
                 total_amount=total_amount,
             )
 
-            order_id = new_order.order_id
-
             for cart_item, product, product_price in validated_items:
-
                 self.order_repository.create_order_detail(
                     db=db,
-                    order_id=order_id,
+                    order_id=new_order.order_id,
                     product_id=product.product_id,
                     quantity=cart_item.quantity,
                     price=product_price,
                 )
 
                 product.available_quantity -= cart_item.quantity
-
                 db.delete(cart_item)
 
             self.order_repository.commit(db)
 
             return self.order_repository.get_order_by_id(
                 db,
-                order_id,
+                new_order.order_id,
             )
-
-        except HTTPException:
-            self.order_repository.rollback(db)
-            raise
 
         except Exception:
             self.order_repository.rollback(db)
@@ -164,24 +167,29 @@ class OrderService:
         self,
         db: Session,
         user_id: int,
+        current_user_id: int,
     ):
+        self._check_user_access(
+            user_id,
+            current_user_id,
+        )
 
         self._check_user_exists(
             db,
-            user_id,
+            current_user_id,
         )
 
         return self.order_repository.get_orders_by_user(
             db,
-            user_id,
+            current_user_id,
         )
 
     def get_order_details(
         self,
         db: Session,
         order_id: int,
+        current_user_id: int,
     ):
-
         order = self.order_repository.get_order_by_id(
             db,
             order_id,
@@ -191,6 +199,12 @@ class OrderService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Order not found",
+            )
+
+        if order.user_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can access only your own order",
             )
 
         return order

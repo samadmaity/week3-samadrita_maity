@@ -14,7 +14,6 @@ class OrderRepository:
         payment_method: str,
         total_amount: Decimal,
     ):
-
         new_order = Order(
             user_id=user_id,
             payment_method=payment_method,
@@ -34,7 +33,6 @@ class OrderRepository:
         quantity: int,
         price: Decimal,
     ):
-
         new_order_detail = OrderDetail(
             order_id=order_id,
             product_id=product_id,
@@ -52,7 +50,6 @@ class OrderRepository:
         db: Session,
         order_id: int,
     ):
-
         return (
             db.query(Order)
             .options(
@@ -67,7 +64,6 @@ class OrderRepository:
         db: Session,
         user_id: int,
     ):
-
         return (
             db.query(Order)
             .options(
@@ -79,9 +75,7 @@ class OrderRepository:
         )
 
     def commit(self, db: Session):
-
         db.commit()
 
     def rollback(self, db: Session):
-
         db.rollback()

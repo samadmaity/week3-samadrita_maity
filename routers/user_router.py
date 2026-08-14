@@ -17,6 +17,3 @@ user_service = UserService()
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return user_service.register_user(db, user)
 
-@router.post('/login')
-def login(user: UserLogin, db: Session= Depends(get_db)):
-    return user_service.login_user(db, user)
